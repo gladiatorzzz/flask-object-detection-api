@@ -9,5 +9,5 @@ numpy
 pytesseract
 Pillow
 ultralytics
-tesseract-ocr
+
 
