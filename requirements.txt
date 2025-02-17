@@ -3,5 +3,6 @@ waitress
 opencv-python
 torch
 torchvision
+openai
 
 
