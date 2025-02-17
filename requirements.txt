@@ -1,5 +1,7 @@
 flask
 waitress
 opencv-python
+torch
+torchvision
 
 
