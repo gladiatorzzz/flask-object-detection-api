@@ -4,5 +4,5 @@ opencv-python
 torch
 torchvision
 openai
-
+boto3
 
