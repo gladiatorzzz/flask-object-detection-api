@@ -1,8 +1,13 @@
-flask
+Flask
 waitress
 opencv-python
 torch
 torchvision
 openai
 boto3
+numpy
+pytesseract
+Pillow
+ultralytics
+tesseract-ocr
 

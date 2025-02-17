@@ -11,11 +11,9 @@ from io import BytesIO
 import os
 from ultralytics import YOLO
 from waitress import serve
+import tempfile
 
 app = Flask(__name__)
-
-# Load YOLOv8 model (pre-trained)
-model = YOLO("yolov8s.pt")
 
 # Secure API keys using environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -29,6 +27,21 @@ polly_client = boto3.client(
     aws_secret_access_key=aws_secret_key,
     region_name="us-east-1"
 )
+
+# Load YOLOv8 model (pre-trained)
+def load_model_from_s3():
+    model_url = "your_s3_model_path"  # Replace with your actual S3 model path
+    s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+    bucket_name = "your_bucket_name"
+    model_file = "yolov8s.pt"
+    
+    # Download model to temporary directory
+    temp_dir = tempfile.mkdtemp()
+    model_path = os.path.join(temp_dir, model_file)
+    s3.download_file(bucket_name, model_url, model_path)
+    return YOLO(model_path)
+
+model = load_model_from_s3()
 
 @app.route("/detect_objects", methods=["POST"])
 def detect_objects():
@@ -113,5 +126,5 @@ def read_text():
         return jsonify({"error": str(e)})
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    serve(app, host="0.0.0.0", port=port)
+    port = int(os.getenv("PORT", 5000))  # Get the port from environment variable or default to 5000
+    serve(app, host="0.0.0.0", port=port)  # Using Waitress to serve the app
