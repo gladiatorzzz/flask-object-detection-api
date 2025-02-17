@@ -20,6 +20,10 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 aws_access_key = os.getenv("AWS_ACCESS_KEY")
 aws_secret_key = os.getenv("AWS_SECRET_KEY")
 
+# Check if AWS credentials are set
+if not aws_access_key or not aws_secret_key:
+    raise ValueError("AWS credentials are not set. Please set AWS_ACCESS_KEY and AWS_SECRET_KEY.")
+
 # AWS Polly (for Text-to-Speech)
 polly_client = boto3.client(
     "polly",
@@ -32,12 +36,14 @@ polly_client = boto3.client(
 def load_model_from_s3():
     model_url = "your_s3_model_path"  # Replace with your actual S3 model path
     s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
-    bucket_name = "your_bucket_name"
+    bucket_name = "your_bucket_name"  # Replace with your actual bucket name
     model_file = "yolov8s.pt"
     
     # Download model to temporary directory
     temp_dir = tempfile.mkdtemp()
     model_path = os.path.join(temp_dir, model_file)
+    
+    # Download the model file from S3
     s3.download_file(bucket_name, model_url, model_path)
     return YOLO(model_path)
 
