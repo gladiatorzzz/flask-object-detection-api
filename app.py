@@ -9,7 +9,9 @@ import pytesseract
 from PIL import Image
 from io import BytesIO
 import os
+import tempfile
 from ultralytics import YOLO
+from waitress import serve  # For production deployment
 
 app = Flask(__name__)
 
@@ -56,14 +58,14 @@ def detect_objects():
             return jsonify({"error": "No image provided"}), 400
 
         img_bytes = base64.b64decode(image_data)
-        img_array = np.array(Image.open(BytesIO(img_bytes)))
+        img_array = np.array(Image.open(BytesIO(img_bytes)).convert("RGB"))
 
         results = model(img_array)
         detected_objects = [model.names[int(d[5])] for d in results[0].boxes.data.tolist()]
 
         return jsonify({"objects_detected": detected_objects})
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/describe_scene", methods=["POST"])
 def describe_scene():
@@ -78,14 +80,14 @@ def describe_scene():
             messages=[
                 {"role": "system", "content": "You are an AI that describes images for visually impaired users."},
                 {"role": "user", "content": "Describe the scene in this image."},
-                {"role": "user", "content": {"image": image_data}}
+                {"role": "user", "content": [{"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_data}"}]}
             ]
         )
 
         scene_description = response["choices"][0]["message"]["content"]
         return jsonify({"scene_description": scene_description})
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/speak", methods=["POST"])
 def text_to_speech():
@@ -108,7 +110,7 @@ def text_to_speech():
 
         return send_file(audio_file, mimetype="audio/mp3", as_attachment=True)
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/read_text", methods=["POST"])
 def read_text():
@@ -120,14 +122,14 @@ def read_text():
             return jsonify({"error": "No image provided"}), 400
 
         img_bytes = base64.b64decode(image_data)
-        img_array = np.array(Image.open(BytesIO(img_bytes)))
+        img_array = np.array(Image.open(BytesIO(img_bytes)).convert("RGB"))
 
         gray = cv2.cvtColor(img_array, cv2.COLOR_BGR2GRAY)
         text = pytesseract.image_to_string(gray)
 
         return jsonify({"extracted_text": text})
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))  # This line is optional when using Gunicorn
+    serve(app, host="0.0.0.0", port=int(os.getenv("PORT", 5000)))  # Use waitress for production
