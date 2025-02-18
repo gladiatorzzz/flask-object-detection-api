@@ -10,8 +10,6 @@ from PIL import Image
 from io import BytesIO
 import os
 from ultralytics import YOLO
-from waitress import serve
-import tempfile
 
 app = Flask(__name__)
 
@@ -132,5 +130,4 @@ def read_text():
         return jsonify({"error": str(e)})
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))  # Get the port from environment variable or default to 5000
-    serve(app, host="0.0.0.0", port=port)  # Using Waitress to serve the app
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))  # This line is optional when using Gunicorn
