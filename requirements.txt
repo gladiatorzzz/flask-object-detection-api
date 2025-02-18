@@ -9,5 +9,3 @@ numpy
 pytesseract
 Pillow
 ultralytics
-
-
